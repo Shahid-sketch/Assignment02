@@ -4,6 +4,20 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');  // Make sure this path is correct
 const router = express.Router();
 
+// Authentication Middleware
+const authMiddleware = (req, res, next) => {
+    const token = req.header('Authorization');
+    if (!token) return res.status(401).json({ message: 'Access Denied. No token provided.' });
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (error) {
+        res.status(400).json({ message: 'Invalid token.' });
+    }
+};
+
 // Sign-Up
 router.post('/signup', async (req, res) => {
     const { username, email, password } = req.body;
@@ -35,6 +49,11 @@ router.post('/signin', async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error });
     }
+});
+
+// Protected Route
+router.get('/protected', authMiddleware, (req, res) => {
+    res.json({ message: 'This is a protected route', user: req.user });
 });
 
 module.exports = router;
