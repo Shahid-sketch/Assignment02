@@ -10,7 +10,9 @@ const authMiddleware = (req, res, next) => {
     if (!token) return res.status(401).json({ message: 'Access Denied. No token provided.' });
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        // Remove "Bearer " from the token string if it exists
+        const actualToken = token.startsWith('Bearer ') ? token.slice(7, token.length).trimLeft() : token;
+        const decoded = jwt.verify(actualToken, process.env.JWT_SECRET);
         req.user = decoded;
         next();
     } catch (error) {
